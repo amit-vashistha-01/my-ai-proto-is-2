@@ -1,0 +1,91 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AKV FounderLens V2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f7f8;color:#202123;font:15px Arial,sans-serif}.top{height:60px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:3}.logo{font-weight:800;font-size:20px}.logo i{color:#2563eb;font-style:normal}.live{font-size:12px;color:#15803d}.wrap{max-width:850px;margin:auto}.chat{padding:25px 16px 120px}.welcome{text-align:center;margin:8vh auto 30px;max-width:700px}.welcome h1{font-size:46px;margin:12px 0}.muted{color:#6b7280;line-height:1.6}.chip{border:1px solid #ddd;background:white;border-radius:20px;padding:9px 13px;margin:5px;cursor:pointer}.msg{display:flex;gap:10px;margin:20px 0}.av{width:34px;height:34px;border-radius:10px;background:#111;color:#fff;display:grid;place-items:center;flex:none;font-weight:bold}.user{justify-content:flex-end}.user .av{order:2;background:#dbeafe;color:#1d4ed8}.bubble{max-width:75%;padding:13px 16px;line-height:1.55}.ai .bubble{background:#fff;border:1px solid #ddd;border-radius:5px 18px 18px 18px}.user .bubble{background:#eef2ff;border-radius:18px 5px 18px 18px}.composer{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(transparent,#f7f7f8 25%);padding:22px 15px 15px}.bar{max-width:850px;margin:auto;background:#fff;border:1px solid #ccc;border-radius:18px;padding:7px;display:flex;align-items:end;box-shadow:0 5px 25px #0001}.plus,.send{width:40px;height:40px;border:0;border-radius:12px;cursor:pointer}.plus{background:#f1f3f5;font-size:23px}.send{background:#111;color:#fff;font-size:18px}.input{flex:1;border:0;outline:0;resize:none;padding:10px;font:inherit;max-height:120px}.card{background:#fff;border:1px solid #ddd;border-radius:18px;padding:20px;margin:14px 0}.score{font-size:44px;font-weight:900}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.mini{background:#f8fafc;padding:14px;border-radius:12px}.mini b{display:block;font-size:19px;margin-top:5px}.task{background:#f8fafc;border-left:4px solid #2563eb;padding:13px;margin:9px 0;border-radius:8px}.tag{display:inline-block;background:#eef2ff;color:#3730a3;border-radius:99px;padding:5px 9px;font-size:11px;font-weight:bold}.restart{background:#111;color:white;border:0;border-radius:10px;padding:11px 15px;font-weight:bold}
+@media(max-width:600px){.welcome h1{font-size:35px}.bubble{max-width:88%}}
+</style></head>
+<body>
+<header class="top"><div class="logo">AKV <i>FounderLens</i></div><div class="live">● Adaptive AI Prototype</div></header>
+<div class="wrap"><main id="chat" class="chat">
+<section id="welcome" class="welcome"><span class="tag">V2 • CHAT-STYLE DIAGNOSIS</span>
+<h1>Tell me your idea.</h1><p class="muted">I won't use the same questionnaire for everyone. I'll understand your idea, ask only relevant questions, identify your current position and choose your next task.</p>
+<button class="chip" onclick="quick('I want to start a food delivery business')">Food business</button>
+<button class="chip" onclick="quick('I want to build an AI education app')">AI app</button>
+<button class="chip" onclick="quick('I want to start a clothing brand')">Clothing brand</button>
+</section></main></div>
+<div class="composer"><div class="bar"><button class="plus" onclick="alert('Upload UI is included. File analysis can be connected in the AI/backend version.')">+</button>
+<textarea id="inp" class="input" rows="1" placeholder="Message FounderLens..." oninput="resize(this)" onkeydown="key(event)"></textarea>
+<button class="send" onclick="send()">↑</button></div></div>
+
+<script>
+const S={idea:"",domain:"general",asked:[],facts:{},last:null,turn:0};
+const BANK={
+tech:{label:"Technology / AI",words:["ai","app","software","website","platform","saas","coding","tech","game"],q:[
+["customer","Who is the first exact user this product is for?"],
+["problem","What real problem does that user face today? Give me one real example."],
+["evidence","Have you spoken to real potential users? What did they actually say or do?"],
+["skill","What part can you build yourself today, and what technical part can't you build yet?"],
+["mvp","What is the smallest version you could put in front of one user within 7 days?"],
+["competition","What existing product or workaround does your user use today?"],
+["money","If this works, who pays and what are they paying for?"]]},
+business:{label:"Business / Venture",words:["business","shop","store","brand","restaurant","cafe","clothing","food","delivery","agency","retail","reselling"],q:[
+["customer","Who is your first paying customer? Be specific."],
+["problem","Why would that customer spend money on this?"],
+["market","Where will you start, and why that market/location?"],
+["competition","Who already sells a similar solution?"],
+["money","What will one customer pay and roughly what will it cost you to serve them?"],
+["evidence","Have you sold, pre-sold, or tested the offer with real customers?"],
+["resources","What money, people, equipment or supplier access do you already have?"]]},
+creator:{label:"Creator / Media",words:["youtube","instagram","content","creator","influencer","video","reels","channel"],q:[
+["audience","Who exactly is your target viewer?"],
+["value","Why should that viewer choose your content over similar creators?"],
+["evidence","What have you already published and what happened?"],
+["skill","Which skill is weakest right now: scripting, editing, presentation, research or consistency?"],
+["money","How will you eventually monetize this?"]]},
+career:{label:"Career / Skill",words:["job","career","freelance","freelancing","resume","employment","skill"],q:[
+["goal","What exact role, skill or income outcome are you targeting?"],
+["skill","What can you already do independently and what can you not do yet?"],
+["evidence","What proof do you have: projects, clients, work, results or certificates?"],
+["market","Which companies or customers would pay for this skill?"],
+["time","How many hours per day can you realistically invest?"]]},
+general:{label:"General Idea",q:[
+["goal","What exact outcome do you want from this idea?"],
+["customer","Who specifically has the problem?"],
+["problem","Describe the real-world problem with one concrete example."],
+["evidence","What evidence do you have that this problem actually exists?"],
+["skill","What can you personally do today and what can you not do yet?"],
+["resources","What time, money and team support can you actually access?"],
+["competition","What alternatives are people using today?"]]}
+};
+function classify(x){x=x.toLowerCase();let best="general",n=0;for(let d in BANK){if(d=="general")continue;let z=BANK[d].words.filter(w=>x.includes(w)).length;if(z>n){n=z;best=d}}return best}
+function quick(x){document.getElementById("inp").value=x;send()}
+function key(e){if(e.key=="Enter"&&!e.shiftKey){e.preventDefault();send()}}
+function resize(x){x.style.height="auto";x.style.height=Math.min(x.scrollHeight,120)+"px"}
+function esc(x){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function add(who,text){let c=document.getElementById("chat"),m=document.createElement("div");m.className="msg "+who;m.innerHTML='<div class="av">'+(who=="ai"?"AI":"You")+'</div><div class="bubble">'+esc(text).replace(/\n/g,"<br>")+'</div>';c.appendChild(m);scrollTo(0,document.body.scrollHeight)}
+function send(){let e=document.getElementById("inp"),v=e.value.trim();if(!v)return;document.getElementById("welcome")?.remove();add("user",v);e.value="";resize(e);
+if(!S.idea){S.idea=v;S.domain=classify(v);setTimeout(()=>{add("ai",`Got it. I see this as a ${BANK[S.domain].label} idea. I won't give you a fixed questionnaire. I'll adapt the conversation to your answers and avoid repeating a question.`);next()},450);return}
+if(S.last)S.facts[S.last[0]]=v;S.turn++;setTimeout(next,400)}
+function next(){let qs=BANK[S.domain].q.filter(x=>!S.asked.includes(x[0]));
+if(!qs.length||S.turn>=6){finish();return}
+let q=qs[Math.floor(Math.random()*Math.min(qs.length,3))];S.asked.push(q[0]);S.last=q;add("ai",q[1])}
+function finish(){
+let f=S.facts,g=[];
+if(!f.customer)g.push("Your first customer is not specific enough.");
+if(f.evidence&&/^(no|none|0|not|never)/i.test(f.evidence))g.push("You have little or no real-world demand evidence yet.");
+if(f.skill&&/(beginner|no|can't|cant|none|don't|dont)/i.test(f.skill))g.push("A key execution skill is missing or weak.");
+if(f.competition&&/^(no|none|not|don't|dont)/i.test(f.competition))g.push("Alternative/competitor research is missing.");
+if(!g.length)g.push("No critical gap detected from the information supplied. The next step is real-world testing.");
+let pos=f.evidence&&/(user|customer|sold|paying|interview|tested)/i.test(f.evidence)?"Early Validator":f.skill&&/advanced|strong|experienced/i.test(f.skill)?"Builder / Advanced Explorer":"Idea-Stage Explorer";
+let task=g[0].includes("customer")?"Define one narrow first customer and interview 5 people from that exact group.":g[0].includes("evidence")?"Run a 5-person validation test before building more.":g[0].includes("skill")?"Choose the one skill blocking your next milestone and complete one small proof project.":g[0].includes("research")?"Map 5 alternatives and write one evidence-based difference for each.":"Build the smallest testable version and put it in front of 5 real users.";
+let score=Math.max(20,Math.min(92,45+S.turn*6-g.length*6));
+add("ai","I have enough information for a first diagnosis. I did not repeat the questions you already answered.");
+setTimeout(()=>{let c=document.getElementById("chat"),r=document.createElement("section");r.innerHTML=
+`<div class="card"><span class="tag">${esc(BANK[S.domain].label)}</span><h2>Your current position</h2><div class="score">${score}/100</div><p><b>${pos}</b></p><p class="muted">This is a prototype diagnostic, not a guarantee of success.</p></div>
+<div class="card"><h3>Adaptive conversation</h3><div class="grid"><div class="mini">Questions asked<b>${S.turn}</b></div><div class="mini">Repeated questions<b>0</b></div><div class="mini">Mode<b>Adaptive</b></div></div></div>
+<div class="card"><h3>Priority gaps</h3>${g.map(x=>'<div class="task">'+esc(x)+'</div>').join("")}</div>
+<div class="card"><h3>Your next task</h3><div class="task"><b>Do this next:</b><br>${esc(task)}</div><p class="muted">A different idea + different evidence should produce a different task.</p></div>
+<div class="card"><h3>Re-assessment loop</h3><p>Complete the task, return with what actually happened, and run the diagnosis again. The goal is <b>Assess → Act → Measure → Reassess</b>.</p><button class="restart" onclick="location.reload()">Start another diagnosis</button></div>`;
+c.appendChild(r);scrollTo(0,document.body.scrollHeight)},500)}
+</script></body></html>
